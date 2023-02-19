@@ -10,12 +10,16 @@
 
 package io.cassandana.broker;
 
+import com.sun.net.httpserver.HttpServer;
 import io.cassandana.broker.config.*;
 import io.cassandana.broker.security.*;
 import io.cassandana.broker.subscriptions.CTrieSubscriptionDirectory;
 import io.cassandana.broker.subscriptions.ISubscriptionsDirectory;
 import io.cassandana.interception.BrokerInterceptor;
 import io.cassandana.interception.InterceptHandler;
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.prometheus.PrometheusConfig;
+import io.micrometer.prometheus.PrometheusMeterRegistry;
 import io.netty.handler.codec.mqtt.MqttPublishMessage;
 import io.cassandana.persistence.MemorySubscriptionsRepository;
 import io.cassandana.silo.Silo;
@@ -26,6 +30,8 @@ import org.slf4j.LoggerFactory;
 import static io.cassandana.logging.LoggingUtils.getInterceptorIds;
 
 import java.io.IOException;
+import java.io.OutputStream;
+import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -43,6 +49,7 @@ public class Server {
     private BrokerInterceptor interceptor;
     
     private Silo silo;
+    final PrometheusMeterRegistry prometheusRegistry = new PrometheusMeterRegistry(PrometheusConfig.DEFAULT);
 
     public static void main(String[] args) throws Exception {
         final Server server = new Server();
@@ -134,9 +141,30 @@ public class Server {
         acceptor = new NewNettyAcceptor();
         acceptor.initialize(mqttHandler, config, sslCtxCreator);
 
+        try {
+            System.out.println("Starting HttpServer");
+            HttpServer server = HttpServer.create(new InetSocketAddress(9044), 0);
+            server.createContext("/metrics", httpExchange -> {
+                String response = prometheusRegistry.scrape();
+                httpExchange.sendResponseHeaders(200, response.getBytes().length);
+                try (OutputStream os = httpExchange.getResponseBody()) {
+                    os.write(response.getBytes());
+                }
+            });
+
+            new Thread(server::start).start();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+
         final long startTime = System.currentTimeMillis() - start;
         LOG.info("Cassandana integration has been started successfully in {} ms", startTime);
         initialized = true;
+
+        Counter testCounter = prometheusRegistry.counter("mqttServerInitialized");
+        testCounter.increment();
+
     }
     
     private IAuthorizatorPolicy initializeAuthorizatorPolicy(IAuthorizatorPolicy authorizatorPolicy, Config conf) {

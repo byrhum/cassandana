@@ -109,6 +109,13 @@
           <artifactId>cassandra-driver-core</artifactId>
           <version>3.6.0</version>
       </dependency>
+      <!-- https://mvnrepository.com/artifact/io.micrometer/micrometer-registry-prometheus -->
+      <dependency>
+          <groupId>io.micrometer</groupId>
+          <artifactId>micrometer-registry-prometheus</artifactId>
+          <version>1.10.4</version>
+      </dependency>
+
    </dependencies>
    <build>
       <finalName>cassandana</finalName>
