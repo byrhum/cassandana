@@ -17,6 +17,7 @@ import io.cassandana.broker.subscriptions.CTrieSubscriptionDirectory;
 import io.cassandana.broker.subscriptions.ISubscriptionsDirectory;
 import io.cassandana.interception.BrokerInterceptor;
 import io.cassandana.interception.InterceptHandler;
+import io.cassandana.metrics.HttpEndpointResponder;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.prometheus.PrometheusConfig;
 import io.micrometer.prometheus.PrometheusMeterRegistry;
@@ -141,22 +142,8 @@ public class Server {
         acceptor = new NewNettyAcceptor();
         acceptor.initialize(mqttHandler, config, sslCtxCreator);
 
-        try {
-            System.out.println("Starting HttpServer");
-            HttpServer server = HttpServer.create(new InetSocketAddress(9044), 0);
-            server.createContext("/metrics", httpExchange -> {
-                String response = prometheusRegistry.scrape();
-                httpExchange.sendResponseHeaders(200, response.getBytes().length);
-                try (OutputStream os = httpExchange.getResponseBody()) {
-                    os.write(response.getBytes());
-                }
-            });
-
-            new Thread(server::start).start();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-
+        HttpEndpointResponder endpointResponder = new HttpEndpointResponder(prometheusRegistry);
+        endpointResponder.enable();
 
         final long startTime = System.currentTimeMillis() - start;
         LOG.info("Cassandana integration has been started successfully in {} ms", startTime);
