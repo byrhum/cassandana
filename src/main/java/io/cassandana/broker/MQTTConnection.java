@@ -12,6 +12,7 @@ package io.cassandana.broker;
 
 import io.cassandana.broker.security.IAuthenticator;
 import io.cassandana.broker.subscriptions.Topic;
+import io.micrometer.core.instrument.Counter;
 import io.micrometer.prometheus.PrometheusMeterRegistry;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
@@ -43,6 +44,7 @@ final class MQTTConnection {
     private PrometheusMeterRegistry pmr;
     private boolean connected;
     private final AtomicInteger lastPacketId = new AtomicInteger(0);
+    Counter mqttConnectAttempt = pmr.counter("mqttConnectionAttempts");
 
     MQTTConnection(Channel channel, BrokerConfiguration brokerConfig, IAuthenticator authenticator,
                    SessionRegistry sessionRegistry, PostOffice postOffice, PrometheusMeterRegistry pmr) {
@@ -122,6 +124,7 @@ final class MQTTConnection {
     }
 
     void processConnect(MqttConnectMessage msg) {
+        mqttConnectAttempt.increment();
         MqttConnectPayload payload = msg.payload();
         String clientId = payload.clientIdentifier();
         final String username = payload.userName();
