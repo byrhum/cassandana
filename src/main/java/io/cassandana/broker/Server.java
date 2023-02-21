@@ -136,7 +136,7 @@ public class Server {
         dispatcher = new PostOffice(subscriptions, authorizatorPolicy, retainedRepository, sessions, interceptor, silo);
         final BrokerConfiguration brokerConfig = new BrokerConfiguration(config);
         MQTTConnectionFactory connectionFactory = new MQTTConnectionFactory(brokerConfig, authenticator, sessions,
-                                                                            dispatcher);
+                                                                            dispatcher,prometheusRegistry);
 
         final NewNettyMQTTHandler mqttHandler = new NewNettyMQTTHandler(connectionFactory);
         acceptor = new NewNettyAcceptor();

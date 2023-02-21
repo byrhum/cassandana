@@ -12,6 +12,7 @@ package io.cassandana.broker;
 
 import io.cassandana.broker.security.IAuthenticator;
 import io.cassandana.broker.subscriptions.Topic;
+import io.micrometer.prometheus.PrometheusMeterRegistry;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelPipeline;
@@ -39,16 +40,18 @@ final class MQTTConnection {
     private IAuthenticator authenticator;
     private SessionRegistry sessionRegistry;
     private final PostOffice postOffice;
+    private PrometheusMeterRegistry pmr;
     private boolean connected;
     private final AtomicInteger lastPacketId = new AtomicInteger(0);
 
     MQTTConnection(Channel channel, BrokerConfiguration brokerConfig, IAuthenticator authenticator,
-                   SessionRegistry sessionRegistry, PostOffice postOffice) {
+                   SessionRegistry sessionRegistry, PostOffice postOffice, PrometheusMeterRegistry pmr) {
         this.channel = channel;
         this.brokerConfig = brokerConfig;
         this.authenticator = authenticator;
         this.sessionRegistry = sessionRegistry;
         this.postOffice = postOffice;
+        this.pmr = pmr;
         this.connected = false;
     }
 
