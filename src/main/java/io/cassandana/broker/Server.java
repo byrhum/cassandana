@@ -18,6 +18,7 @@ import io.cassandana.broker.subscriptions.ISubscriptionsDirectory;
 import io.cassandana.interception.BrokerInterceptor;
 import io.cassandana.interception.InterceptHandler;
 import io.cassandana.metrics.HttpEndpointResponder;
+import io.cassandana.metrics.prometheusCounterConfig;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.prometheus.PrometheusConfig;
 import io.micrometer.prometheus.PrometheusMeterRegistry;
@@ -31,8 +32,6 @@ import org.slf4j.LoggerFactory;
 import static io.cassandana.logging.LoggingUtils.getInterceptorIds;
 
 import java.io.IOException;
-import java.io.OutputStream;
-import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -51,6 +50,7 @@ public class Server {
     
     private Silo silo;
     final PrometheusMeterRegistry prometheusRegistry = new PrometheusMeterRegistry(PrometheusConfig.DEFAULT);
+    private prometheusCounterConfig counterConfig = new prometheusCounterConfig(prometheusRegistry);
 
     public static void main(String[] args) throws Exception {
         final Server server = new Server();
@@ -136,7 +136,7 @@ public class Server {
         dispatcher = new PostOffice(subscriptions, authorizatorPolicy, retainedRepository, sessions, interceptor, silo);
         final BrokerConfiguration brokerConfig = new BrokerConfiguration(config);
         MQTTConnectionFactory connectionFactory = new MQTTConnectionFactory(brokerConfig, authenticator, sessions,
-                                                                            dispatcher,prometheusRegistry);
+                                                                            dispatcher, prometheusRegistry);
 
         final NewNettyMQTTHandler mqttHandler = new NewNettyMQTTHandler(connectionFactory);
         acceptor = new NewNettyAcceptor();
@@ -147,11 +147,11 @@ public class Server {
 
         final long startTime = System.currentTimeMillis() - start;
         LOG.info("Cassandana integration has been started successfully in {} ms", startTime);
+        LOG.info("Test change for jenkins build");
         initialized = true;
 
-        Counter testCounter = prometheusRegistry.counter("mqttServerInitialized");
-        testCounter.increment();
-
+        counterConfig.init();
+        prometheusRegistry.counter("mqttServerInitialized").increment();
     }
     
     private IAuthorizatorPolicy initializeAuthorizatorPolicy(IAuthorizatorPolicy authorizatorPolicy, Config conf) {

@@ -44,7 +44,6 @@ final class MQTTConnection {
     private PrometheusMeterRegistry pmr;
     private boolean connected;
     private final AtomicInteger lastPacketId = new AtomicInteger(0);
-    Counter mqttConnectAttempt = pmr.counter("mqttConnectionAttempts");
 
     MQTTConnection(Channel channel, BrokerConfiguration brokerConfig, IAuthenticator authenticator,
                    SessionRegistry sessionRegistry, PostOffice postOffice, PrometheusMeterRegistry pmr) {
@@ -59,6 +58,7 @@ final class MQTTConnection {
 
     void handleMessage(MqttMessage msg) {
         MqttMessageType messageType = msg.fixedHeader().messageType();
+        pmr.counter("mqttHandleMessage").increment();
         LOG.debug("Received MQTT message, type: {}, channel: {}", messageType, channel);
         switch (messageType) {
             case CONNECT:
@@ -124,7 +124,8 @@ final class MQTTConnection {
     }
 
     void processConnect(MqttConnectMessage msg) {
-        mqttConnectAttempt.increment();
+        pmr.counter("mqttHandleMessageConnect").increment();
+        System.out.println("ProcessingConnect");
         MqttConnectPayload payload = msg.payload();
         String clientId = payload.clientIdentifier();
         final String username = payload.userName();
