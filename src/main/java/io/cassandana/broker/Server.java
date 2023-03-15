@@ -147,7 +147,7 @@ public class Server {
 
         final long startTime = System.currentTimeMillis() - start;
         LOG.info("Cassandana integration has been started successfully in {} ms", startTime);
-        LOG.info("Test change for jenkins build");
+        LOG.info("Test change for jenkins build:1");
         initialized = true;
 
         counterConfig.init();
