@@ -77,6 +77,7 @@ public class Server {
      */
     public void startServer(Config config) throws IOException {
         LOG.debug("Starting cassandana integration using IConfig instance");
+	LOG.debug("Jenkins - git push trigger test");
         startServer(config, null);
     }
 
