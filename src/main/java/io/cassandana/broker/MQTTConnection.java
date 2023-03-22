@@ -146,6 +146,7 @@ final class MQTTConnection {
             }
 
             if (!cleanSession) {
+                pmr.counter("mqttConnectionNullIdPersistentSession").increment();
                 LOG.warn("MQTT client ID cannot be empty for persistent session. Username: {}, channel: {}",
                          username, channel);
                 abortConnection(CONNECTION_REFUSED_IDENTIFIER_REJECTED);
@@ -153,6 +154,7 @@ final class MQTTConnection {
             }
 
             // Generating client id.
+            pmr.counter("mqttConnectionClientIdGenerated").increment();
             clientId = UUID.randomUUID().toString().replace("-", "");
             LOG.debug("Client has connected with integration generated id: {}, username: {}, channel: {}", clientId,
                       username, channel);
