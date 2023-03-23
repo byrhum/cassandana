@@ -167,6 +167,7 @@ final class MQTTConnection {
         }
 
         try {
+            pmr.counter("mqttConnectionSessionBindAttempt").increment();
             LOG.trace("Binding MQTTConnection (channel: {}) to session", channel);
             sessionRegistry.bindToSession(this, msg, clientId);
 

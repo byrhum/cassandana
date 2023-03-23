@@ -15,5 +15,6 @@ public class prometheusCounterConfig {
         pmr.counter("mqttHandleMessage");
         pmr.counter("mqttConnectionNullIdNotAllowed");
         pmr.counter("mqttConnectionClientIdGenerated");
+        pmr.counter("mqttConnectionSessionBindAttempt");
     }
 }
