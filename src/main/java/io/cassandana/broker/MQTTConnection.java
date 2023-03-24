@@ -211,6 +211,7 @@ final class MQTTConnection {
     }
 
     private void abortConnection(MqttConnectReturnCode returnCode) {
+        pmr.counter("mqttConnectionAbort").increment();
         MqttConnAckMessage badProto = connAck(returnCode, false);
         channel.writeAndFlush(badProto).addListener(FIRE_EXCEPTION_ON_FAILURE);
         channel.close().addListener(CLOSE_ON_FAILURE);
@@ -268,6 +269,7 @@ final class MQTTConnection {
         connected = true;
         final MqttConnAckMessage ackMessage = connAck(CONNECTION_ACCEPTED, isSessionAlreadyPresent);
         channel.writeAndFlush(ackMessage).addListener(FIRE_EXCEPTION_ON_FAILURE);
+        pmr.counter("mqttConnectionSendConnAck").increment();
     }
 
     boolean isConnected() {
@@ -288,6 +290,7 @@ final class MQTTConnection {
         sessionRegistry.disconnect(clientID);
         connected = false;
         channel.close().addListener(FIRE_EXCEPTION_ON_FAILURE);
+        pmr.counter("mqttConnectionDisconnect").increment();
         LOG.trace("Processed DISCONNECT CId={}, channel: {}", clientID, channel);
     }
 
